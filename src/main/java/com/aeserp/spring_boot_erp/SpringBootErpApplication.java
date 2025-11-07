@@ -1,0 +1,13 @@
+package com.aeserp.spring_boot_erp;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringBootErpApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringBootErpApplication.class, args);
+	}
+
+}
