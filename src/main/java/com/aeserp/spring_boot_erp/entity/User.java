@@ -87,6 +87,14 @@ public class User {
     @Size(max = 50)
     private String grade;
 
+    @Column(nullable = false)
+    private Boolean isActivated = false; // Par défaut, le compte est désactivé à la création
+    
+    @Column(length = 50)
+    @NotBlank
+    @Size(max = 50)
+    private Long note;
+
     // --- Relations JPA ---
 
     @ManyToOne(fetch = FetchType.LAZY) 
