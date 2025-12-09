@@ -8,6 +8,7 @@ import java.util.Set;
 // Imports de validation et de sérialisation
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull; // 🔑 Ajout
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,12 +19,12 @@ import lombok.*;
 
 @Entity
 @Table(name="users") 
-@Getter // Utilisation de @Getter et @Setter au lieu de @Data
-@Setter // pour exclure explicitement le mot de passe
-@NoArgsConstructor // Ajout des constructeurs requis par JPA
+@Getter 
+@Setter 
+@NoArgsConstructor 
 @AllArgsConstructor
-@ToString(exclude = {"password", "managedEmployees", "manager", "roles"}) // Exclusion des relations ET du mot de passe
-@EqualsAndHashCode(exclude = {"managedEmployees", "roles"}) // Exclusion des collections pour le HashCode
+@ToString(exclude = {"password", "managedEmployees", "manager", "roles"}) 
+@EqualsAndHashCode(exclude = {"managedEmployees", "roles"}) 
 public class User {
     
     @Id
@@ -33,8 +34,8 @@ public class User {
     @Column(unique = true, nullable = false, length = 20) 
     @NotBlank(message = "Le nom d'utilisateur ne peut être vide.")
     @Size(max = 20)
-    private String username;
-    
+    private String username; // 🔑 CORRECTION: Rendu private
+
     private String photoUrl; 
 
     @Column(unique = true, nullable = false, length = 50) 
@@ -44,9 +45,9 @@ public class User {
     private String email;
     
     @Column(nullable = false, length = 120) 
-    @NotBlank(message = "Le mot de passe ne peut être vide.")
+    // 🔑 IMPORTANT: Le mot de passe ne peut pas être @NotBlank pour la mise à jour si on ne le change pas. La validation est déplacée dans le UserService/Controller.
     @Size(max = 120)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <--NE JAMAIS SÉRIALISER LE MOT DE PASSE EN JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) 
     private String password;
     
     @Column(length = 50)
@@ -60,19 +61,14 @@ public class User {
     private String lastName;
 
     @Column(length = 50)
-    @NotBlank
-    @Size(max = 50)
-    private String companyName;
+    // 🔑 CORRECTION: Ajout de valeurs par défaut pour les champs non nullables
+    private String companyName = "N/A";
 
     @Column(length = 50)
-    @NotBlank
-    @Size(max = 50)
-    private String phoneNumber;
+    private String phoneNumber = "N/A";
 
     @Column(length = 50)
-    @NotBlank
-    @Size(max = 50)
-    private String country;
+    private String country = "N/A";
 
     @Column(length = 50)
     @NotBlank
@@ -88,25 +84,26 @@ public class User {
     private String grade;
 
     @Column(nullable = false)
-    private Boolean isActivated = false; // Par défaut, le compte est désactivé à la création
+    @NotNull // 🔑 Ajout de @NotNull car c'est un Boolean (nullable=false)
+    private Boolean isActivated = false; 
     
     @Column(length = 50)
-    @NotBlank
-    @Size(max = 50)
-    private Long note;
+    @NotNull // 🔑 Ajout de @NotNull
+    private Long note = 0L; // 🔑 Initialisation par défaut
 
-    // --- Relations JPA ---
+ // --- Relations JPA (inchangées, mais les optimisations sont conservées) ---
 
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "manager_matricule")
-    @JsonIgnoreProperties("managedEmployees") 
+    @JsonIgnoreProperties({"managedEmployees", "handler", "hibernateLazyInitializer"}) 
     private User manager;
 
     @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY, cascade = CascadeType.ALL) 
-    @JsonIgnoreProperties("manager") 
+    @JsonIgnoreProperties({"manager", "handler", "hibernateLazyInitializer"}) 
     private List<User> managedEmployees;
     
     @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"handler", "hibernateLazyInitializer"}) 
     @JoinTable(name = "user_role", 
                joinColumns = @JoinColumn(name = "user_matricule"), 
                inverseJoinColumns = @JoinColumn(name = "role_id"))

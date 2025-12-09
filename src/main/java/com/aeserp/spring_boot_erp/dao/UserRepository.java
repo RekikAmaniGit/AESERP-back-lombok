@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 
 @RepositoryRestResource(excerptProjection = UserListProjection.class)
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
-
 	
 	// 1. Recherche par nom d'utilisateur
     Optional<User> findByUsername(String username);
@@ -35,10 +34,16 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     // 4. Vérification de l'existence par email
     boolean existsByEmail(String email);
     
-    
+ // 5. Récupérer toutes les positions uniques (pour les filtres/formulaires)
+    @Query("SELECT DISTINCT u.position FROM User u WHERE u.position IS NOT NULL AND u.position <> '' ORDER BY u.position ASC")
+    List<String> findDistinctPositions();
+
+    // 6. Récupérer tous les grades uniques (pour les filtres/formulaires)
+    @Query("SELECT DISTINCT u.grade FROM User u WHERE u.grade IS NOT NULL AND u.grade <> '' ORDER BY u.grade ASC")
+    List<String> findDistinctGrades();
     
 // ------------------------------------
-// --- AJOUTS ET MISE À JOUR FILTRAGE ---
+//      --- AJOUTS  FILTRAGE ---
 // ------------------------------------
     
 
@@ -49,6 +54,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
         "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
         "LOWER(CAST(u.matricule AS text)) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
         "LOWER(u.position) LIKE LOWER(CONCAT('%', :keyword, '%'))")
- Page<User> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
+ Page<UserListProjection> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
     
 }
